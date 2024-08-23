@@ -443,6 +443,7 @@ namespace MetaOptimize
                 // this.innerProblemEncoder.AddConstantVar(MaxAuxVariables[pair]);
             }
 
+            // ? What's alpha?
             double alpha = Math.Ceiling(this.Topology.TotalCapacity() * 1.1);
             Logger.Debug("$$$$$$ alpha value for demand pinning objective = " + alpha);
             foreach (var (pair, maxVar) in MaxAuxVariables)

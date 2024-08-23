@@ -1530,6 +1530,7 @@ namespace MetaOptimize
                 Console.WriteLine("**************************************************");
                 try
                 {
+                    // ? Not sure what the below does.
                     solution = solver.CheckFeasibility(ubGap);
                     lbGap = ubGap;
                     ubGap = ubGap * 2;
@@ -1541,6 +1542,7 @@ namespace MetaOptimize
                 // solver.ChangeConstraintRHS(nameLBConst, -1 * ubGap);
             }
 
+            // ? Below looks like a binary search?
             while ((ubGap - lbGap) / lbGap > intervalConf)
             {
                 double midGap = (lbGap + ubGap) / 2;
