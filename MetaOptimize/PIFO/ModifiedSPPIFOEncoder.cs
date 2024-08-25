@@ -59,7 +59,7 @@ namespace MetaOptimize
             var constr2 = new Polynomial<TVar>(
                 new Term<TVar>(1, this.queuePlacementVar[(pid, qid)]),
                 new Term<TVar>(-1 + miu),
-                new Term<TVar>(-epsilon, this.queueRankVarAfterPD[(pid, qid - 1)]),
+                new Term<TVar>(-epsilon, this.QueueRankVarAfterPD[(pid, qid - 1)]),
                 new Term<TVar>(epsilon, this.packetRankVar[pid]));
             this.Solver.AddLeqZeroConstraint(constr2);
         }
@@ -120,7 +120,7 @@ namespace MetaOptimize
                 // l'_{i, j} = l_{ij} - pdBiasL - pdBiasH
                 for (int qid = 0; qid < this.NumQueues; qid++) {
                     var constr = new Polynomial<TVar>(
-                        new Term<TVar>(-1, this.queueRankVarAfterPD[(pid, qid)]),
+                        new Term<TVar>(-1, this.QueueRankVarAfterPD[(pid, qid)]),
                         new Term<TVar>(1, this.queueRankVar[(pid, qid)]));
                     if (qid < this.SplitQueue) {
                         constr.Add(new Term<TVar>(-1, pdBiasL));

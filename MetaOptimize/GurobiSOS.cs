@@ -336,6 +336,7 @@ namespace MetaOptimize
             {
                 switch (term.Exponent)
                 {
+                    // ? Don't understand why we always assume linear polynomials.
                     case 1:
                         obj.AddTerm(term.Coefficient, term.Variable.Value);
                         break;

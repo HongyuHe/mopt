@@ -18,8 +18,8 @@ namespace MetaOptimize
         /// </summary>
         protected override void ComputeCost()
         {
-            PIFOUtils<TVar, TSolution>.ComputeAvgDelayPlacement(this.Solver, this.cost, this.NumPackets, this.MaxRank,
-                this.placementVariables, this.rankVariables);
+            PIFOUtils<TVar, TSolution>.ComputeAvgDelayPlacement(Solver, Cost, NumPackets, MaxRank,
+                PlacementVariables, RankVariables);
         }
     }
 }

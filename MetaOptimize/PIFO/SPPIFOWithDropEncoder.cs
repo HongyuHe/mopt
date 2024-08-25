@@ -105,7 +105,7 @@ namespace MetaOptimize
         {
             for (int pid = 0; pid < this.NumPackets; pid++) {
                 var sumPoly = new Polynomial<TVar>(
-                    new Term<TVar>(-1, this.packetWeightVar[pid]),
+                    new Term<TVar>(-1, this.PacketWeightVar[pid]),
                     new Term<TVar>(-1 * pid));
                 for (int qid = 0; qid < this.NumQueues; qid++) {
                     sumPoly.Add(new Term<TVar>((qid + 1) * this.NumPackets, this.queuePlacementVar[(pid, qid)]));
@@ -127,16 +127,16 @@ namespace MetaOptimize
                         continue;
                     }
                     var constr1 = new Polynomial<TVar>(
-                        new Term<TVar>(1, this.dequeueAfter[(pid, pid2)]),
+                        new Term<TVar>(1, this.DequeueAfter[(pid, pid2)]),
                         new Term<TVar>(-1),
-                        new Term<TVar>(-epsilon, this.packetWeightVar[pid2]),
-                        new Term<TVar>(epsilon, this.packetWeightVar[pid]));
+                        new Term<TVar>(-epsilon, this.PacketWeightVar[pid2]),
+                        new Term<TVar>(epsilon, this.PacketWeightVar[pid]));
                     this.Solver.AddLeqZeroConstraint(constr1);
 
                     var constr2 = new Polynomial<TVar>(
-                        new Term<TVar>(-1, this.dequeueAfter[(pid, pid2)]),
-                        new Term<TVar>(epsilon, this.packetWeightVar[pid2]),
-                        new Term<TVar>(-epsilon, this.packetWeightVar[pid]));
+                        new Term<TVar>(-1, this.DequeueAfter[(pid, pid2)]),
+                        new Term<TVar>(epsilon, this.PacketWeightVar[pid2]),
+                        new Term<TVar>(-epsilon, this.PacketWeightVar[pid]));
                     this.Solver.AddLeqZeroConstraint(constr2);
                 }
             }

@@ -41,9 +41,12 @@ namespace MetaOptimize
             }
             if (!variableToDerivativeMapping.ContainsKey(term.Variable.Value))
             {
+                // * Initialize the derivative to 0.
                 variableToDerivativeMapping[term.Variable.Value] = 0;
             }
+            // ? I guess this is assuming linear polynomials?
             Debug.Assert(term.Exponent <= 1);
+            // * For linear polynomials, the derivative is the coefficient.
             variableToDerivativeMapping[term.Variable.Value] += term.Coefficient;
         }
 

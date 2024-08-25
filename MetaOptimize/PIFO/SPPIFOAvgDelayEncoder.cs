@@ -19,7 +19,7 @@ namespace MetaOptimize
         protected override void ComputeCost()
         {
             PIFOUtils<TVar, TSolution>.ComputeAvgDelayDequeueAfter(this.Solver, this.cost, this.NumPackets, this.MaxRank,
-                this.dequeueAfter, this.packetRankVar);
+                this.DequeueAfter, this.packetRankVar);
         }
     }
 }
