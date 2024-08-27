@@ -220,7 +220,9 @@ namespace MetaOptimize.Cli
             Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(ffdSolutionG, Newtonsoft.Json.Formatting.Indented));
             Console.WriteLine("****");
             Console.WriteLine("Optimal number of bins: " + optimalSolutionG.TotalNumBinsUsed);
+            // Console.WriteLine("Optimal number of items: " + optimalSolutionG.Items);
             Console.WriteLine("FFD number of bins: " + ffdSolutionG.TotalNumBinsUsed);
+            // Console.WriteLine("FFD number of items: " + ffdSolutionG.Items);
         }
 
         /// <summary>
@@ -337,6 +339,7 @@ namespace MetaOptimize.Cli
         private static int ComputeInversionNum(PIFOOptimizationSolution optimalSolutionG, Dictionary<int, double> orderToRankOpt, int pid)
         {
             int numInvOpt = 0;
+            Console.WriteLine("optimalSolutionG.Admit[pid] = " + optimalSolutionG.Admit[pid]);
             if (optimalSolutionG.Admit[pid] >= 0.98)
             {
                 int currOrder = optimalSolutionG.Order[pid];
@@ -344,6 +347,7 @@ namespace MetaOptimize.Cli
                 {
                     if (orderToRankOpt[prev] > optimalSolutionG.Ranks[pid])
                     {
+                        Console.WriteLine("orderToRankOpt[prev] = " + orderToRankOpt[prev] + ", optimalSolutionG.Ranks[pid] = " + optimalSolutionG.Ranks[pid]);
                         numInvOpt += 1;
                     }
                 }
@@ -633,7 +637,7 @@ namespace MetaOptimize.Cli
                 case "TEExampleMain":
                     TEExampleMain(args);
                     break;
-                case "vbpMain":
+                case "vbpMain1":
                     vbpMain1(args);
                     break;
                 case "vbpMain2":

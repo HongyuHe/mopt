@@ -484,6 +484,7 @@ namespace MetaOptimize
             var flows = new Dictionary<(string, string), double>();
             var flowPaths = new Dictionary<string[], double>(new PathComparer());
 
+            // * Use variable names to get the corresponding values.
             foreach (var (pair, poly) in this.DemandVariables)
             {
                 demands[pair] = 0;
