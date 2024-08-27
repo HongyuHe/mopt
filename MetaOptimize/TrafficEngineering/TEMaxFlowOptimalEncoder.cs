@@ -124,7 +124,9 @@ namespace MetaOptimize
                     {
                         continue;
                     }
+                    // * These variables are their names in string.
                     var variable = this.Solver.CreateVariable("demand_" + pair.Item1 + "_" + pair.Item2);
+                    // * A term = coeff x var_name
                     this.DemandVariables[pair] = new Polynomial<TVar>(new Term<TVar>(1, variable));
                     this.variables.Add(variable);
                     demandVariables.Add(variable);
@@ -230,6 +232,7 @@ namespace MetaOptimize
             // we want to do a rewrite or not i think). We should probably seperate that into its own instance of the rewrite interface and initiate the inner problem
             // encoder depending on whether we have an aligned follower or not.
             // TODO: when we want to re-factor this we should first write a test case, then create a deprecated instance of this file and check they produce the same answer.
+            // * Constraints are encoded as polynomials with == or ≤ 0 conditions.
             this.innerProblemEncoder.AddEqZeroConstraint(totalFlowEquality);
 
             // Ensure that the demand constraints are respected
@@ -253,6 +256,7 @@ namespace MetaOptimize
                 // this.kktEncoder.AddLeqZeroConstraint(new Polynomial<TVar>(new Term<TVar>(-1, variable)));
                 var flowSizeConstraints = this.DemandVariables[pair].Negate();
                 flowSizeConstraints.Add(new Term<TVar>(1, variable));
+                // * I think the above is the same as adding a negated variable value to the poly constraint.
                 this.innerProblemEncoder.AddLeqZeroConstraint(flowSizeConstraints);
             }
 
@@ -267,6 +271,8 @@ namespace MetaOptimize
                 foreach (var path in paths)
                 {
                     this.innerProblemEncoder.AddLeqZeroConstraint(new Polynomial<TVar>(new Term<TVar>(-1, this.FlowPathVariables[path])));
+                    // * It's equivalent of doing the following (but we only have ≤0).
+                    // this.innerProblemEncoder.AddGeqZeroConstraint(new Polynomial<TVar>(new Term<TVar>(1, this.FlowPathVariables[path])));
                 }
             }
 
@@ -290,6 +296,7 @@ namespace MetaOptimize
             Logger.Info("ensuring f_k = sum_p f_k^p");
             foreach (var (pair, paths) in this.Paths)
             {
+                // * A flow is a src-dst pair associated with multiple paths between them.
                 if (!IsDemandValid(pair))
                 {
                     continue;
@@ -297,9 +304,11 @@ namespace MetaOptimize
                 var computeFlow = new Polynomial<TVar>(new Term<TVar>(0));
                 foreach (var path in paths)
                 {
+                    // * Add up the values of this flow along each path.
                     computeFlow.Add(new Term<TVar>(1, this.FlowPathVariables[path]));
                 }
-
+                // * The total flow values aggregated along all its paths should be equal to the flow.
+                // * I.e., sum_p f_k^p - f_k = 0. Then, we just give it to the solver.
                 computeFlow.Add(new Term<TVar>(-1, this.FlowVariables[pair]));
                 this.innerProblemEncoder.AddEqZeroConstraint(computeFlow);
             }
@@ -334,6 +343,7 @@ namespace MetaOptimize
 
             foreach (var (edge, total) in sumPerEdge)
             {
+                // * The total flow value of each edge is bounded by its capacity.
                 total.Add(new Term<TVar>(-1 * edge.Capacity));
                 this.innerProblemEncoder.AddLeqZeroConstraint(total);
             }
@@ -342,6 +352,7 @@ namespace MetaOptimize
             // Generate the full constraints.
             var objective = new Polynomial<TVar>(new Term<TVar>(1, this.TotalDemandMetVariable));
             Logger.Info("calling inner encoder");
+            // * Add the maximization of the total flow (I guess).
             this.innerProblemEncoder.AddMaximizationConstraints(objective, noAdditionalConstraints, verbose);
 
             // Optimization objective is the total demand met.

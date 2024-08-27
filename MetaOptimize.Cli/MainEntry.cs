@@ -22,6 +22,8 @@ namespace MetaOptimize.Cli
         /// <param name="args"></param>
         public static void TEExampleMain(string[] args)
         {
+            Console.WriteLine(">>> TEExampleMain");
+
             var topology = new Topology();
             topology.AddNode("a");
             topology.AddNode("b");
@@ -63,8 +65,10 @@ namespace MetaOptimize.Cli
         /// Use this function to test our theorem for VBP.
         /// (see theorem 1 in our NSDI24 Paper).
         /// </summary>
-        public static void vbpMain(string[] args)
+        public static void vbpMain1(string[] args)
         {
+            Console.WriteLine(">>> vbpMain1");
+
             // OPT = 2m + 3n
             // HUE = 4m + 6n
             // num jobs = 6m + 9n
@@ -188,8 +192,10 @@ namespace MetaOptimize.Cli
         /// test MetaOpt on VBP.
         /// </summary>
         /// TODO: specify how this function is different from the previous.
-        public static void Main(string[] args)
+        public static void vbpMain2(string[] args)
         {
+            Console.WriteLine(">>> Main");
+
             var binSize = new List<double>();
             binSize.Add(1.00001);
             binSize.Add(1.00001);
@@ -214,7 +220,9 @@ namespace MetaOptimize.Cli
             Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(ffdSolutionG, Newtonsoft.Json.Formatting.Indented));
             Console.WriteLine("****");
             Console.WriteLine("Optimal number of bins: " + optimalSolutionG.TotalNumBinsUsed);
+            // Console.WriteLine("Optimal number of items: " + optimalSolutionG.Items);
             Console.WriteLine("FFD number of bins: " + ffdSolutionG.TotalNumBinsUsed);
+            // Console.WriteLine("FFD number of items: " + ffdSolutionG.Items);
         }
 
         /// <summary>
@@ -222,6 +230,8 @@ namespace MetaOptimize.Cli
         /// </summary>
         public static void PIFOTestMain(string[] args)
         {
+            Console.WriteLine(">>> PIFOTestMain");
+
             int maxRank = 8;
             int numPackets = 15;
             int numQueues = 4;
@@ -271,6 +281,8 @@ namespace MetaOptimize.Cli
         /// </summary>
         public static void PIFOMain(string[] args)
         {
+            Console.WriteLine(">>> PIFOMain");
+
             int maxRank = 8;
             int numPackets = 18;
             int numQueues = 4;
@@ -327,6 +339,7 @@ namespace MetaOptimize.Cli
         private static int ComputeInversionNum(PIFOOptimizationSolution optimalSolutionG, Dictionary<int, double> orderToRankOpt, int pid)
         {
             int numInvOpt = 0;
+            Console.WriteLine("optimalSolutionG.Admit[pid] = " + optimalSolutionG.Admit[pid]);
             if (optimalSolutionG.Admit[pid] >= 0.98)
             {
                 int currOrder = optimalSolutionG.Order[pid];
@@ -334,6 +347,7 @@ namespace MetaOptimize.Cli
                 {
                     if (orderToRankOpt[prev] > optimalSolutionG.Ranks[pid])
                     {
+                        Console.WriteLine("orderToRankOpt[prev] = " + orderToRankOpt[prev] + ", optimalSolutionG.Ranks[pid] = " + optimalSolutionG.Ranks[pid]);
                         numInvOpt += 1;
                     }
                 }
@@ -357,6 +371,8 @@ namespace MetaOptimize.Cli
         /// </summary>
         public static void NSDIMain(string[] args)
         {
+            Console.WriteLine(">>> NSDIMain");
+
             // NSDIExp.compareGapDelayDiffMethodsDP();
             // NSDIExp.compareLargeScaleGapDelayDiffMethodsDP();
             // NSDIExp.compareGapDelayDiffMethodsPop();
@@ -378,6 +394,8 @@ namespace MetaOptimize.Cli
         /// </summary>
         public static void hotnetsMain(string[] args)
         {
+            Console.WriteLine(">>> hotnetsMain");
+
             // var topology = Topology.RandomRegularGraph(8, 7, 1, seed: 0);
             // var topology = Topology.SmallWordGraph(5, 4, 1);
             // foreach (var edge in topology.GetAllEdges()) {
@@ -409,6 +427,8 @@ namespace MetaOptimize.Cli
         /// <param name="args">The arguments.</param>
         public static void ssMain(string[] args)
         {
+            Console.WriteLine(">>> ssMain");
+
             // read the command line arguments.
             var opts = CommandLine.Parser.Default.ParseArguments<CliOptions>(args).MapResult(o => o, e => null);
             CliOptions.Instance = opts;
@@ -603,6 +623,45 @@ namespace MetaOptimize.Cli
                     throw new Exception("No heuristic selected.");
             }
             Utils.checkSolution(topology, heuristicEncoderG, optimalEncoderG, heuristic, optimal, demands, "gurobiCheck");
+        }
+
+        /// <summary>
+        /// Entry point of the application.
+        /// </summary>
+        /// <param name="args">Command line arguments.</param>
+        public static void Main(string[] args)
+        {
+            // Run different test cases given the specified name in the args[0]
+            switch (args[0])
+            {
+                case "TEExampleMain":
+                    TEExampleMain(args);
+                    break;
+                case "vbpMain1":
+                    vbpMain1(args);
+                    break;
+                case "vbpMain2":
+                    vbpMain2(args);
+                    break;
+                case "PIFOTestMain":
+                    PIFOTestMain(args);
+                    break;
+                case "PIFOMain":
+                    PIFOMain(args);
+                    break;
+                case "NSDIMain":
+                    NSDIMain(args);
+                    break;
+                case "hotnetsMain":
+                    hotnetsMain(args);
+                    break;
+                case "ssMain":
+                    ssMain(args);
+                    break;
+                default:
+                    Console.WriteLine("Invalid test case name");
+                    break;
+            }
         }
     }
 }

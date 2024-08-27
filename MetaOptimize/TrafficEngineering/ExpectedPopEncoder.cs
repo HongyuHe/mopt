@@ -151,6 +151,8 @@ namespace MetaOptimize
             var objective = new Polynomial<TVar>(new Term<TVar>(-1 * this.NumSamples, objectiveVariable));
             foreach (var encdoing in encodings)
             {
+                // ? This just adds all objectives of the samples to the top-level global objective.
+                // So we are solving them as one optimization instead of individually and take the avg?
                 objective.Add(new Term<TVar>(1, encdoing.GlobalObjective));
             }
             this.Solver.AddEqZeroConstraint(objective);

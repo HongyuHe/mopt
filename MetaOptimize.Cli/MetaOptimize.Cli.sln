@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 25.0.1706.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaOptimize.Cli", "MetaOptimize.Cli.csproj", "{E207BC83-FA7D-4D2B-B41E-EAC767AC3092}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E207BC83-FA7D-4D2B-B41E-EAC767AC3092}.Debug|x64.ActiveCfg = Debug|x64
+		{E207BC83-FA7D-4D2B-B41E-EAC767AC3092}.Debug|x64.Build.0 = Debug|x64
+		{E207BC83-FA7D-4D2B-B41E-EAC767AC3092}.Release|x64.ActiveCfg = Release|x64
+		{E207BC83-FA7D-4D2B-B41E-EAC767AC3092}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {097B8061-38FD-4B91-8EE7-6B0DB66CF4C8}
+	EndGlobalSection
+EndGlobal

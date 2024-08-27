@@ -443,6 +443,7 @@ namespace MetaOptimize
                 // this.innerProblemEncoder.AddConstantVar(MaxAuxVariables[pair]);
             }
 
+            // ? What's alpha?
             double alpha = Math.Ceiling(this.Topology.TotalCapacity() * 1.1);
             Logger.Debug("$$$$$$ alpha value for demand pinning objective = " + alpha);
             foreach (var (pair, maxVar) in MaxAuxVariables)
@@ -483,6 +484,7 @@ namespace MetaOptimize
             var flows = new Dictionary<(string, string), double>();
             var flowPaths = new Dictionary<string[], double>(new PathComparer());
 
+            // * Use variable names to get the corresponding values.
             foreach (var (pair, poly) in this.DemandVariables)
             {
                 demands[pair] = 0;

@@ -34,17 +34,17 @@ namespace MetaOptimize
         /// <summary>
         /// lb on rank of queue j after applying push down.
         /// </summary>
-        public Dictionary<(int, int), TVar> queueRankVarAfterPD  { get; set; }
+        public Dictionary<(int, int), TVar> QueueRankVarAfterPD  { get; set; }
 
         /// <summary>
         /// weight of packet i.
         /// </summary>
-        public Dictionary<int, TVar> packetWeightVar { get; set; }
+        public Dictionary<int, TVar> PacketWeightVar { get; set; }
 
         /// <summary>
         /// if packet i should be dequeued after packet j.
         /// </summary>
-        public Dictionary<(int, int), TVar> dequeueAfter { get; set; }
+        public Dictionary<(int, int), TVar> DequeueAfter { get; set; }
 
         // /// <summary>
         // /// = 1 if push down should happen at the time enqueuing i-th packet.
@@ -59,7 +59,7 @@ namespace MetaOptimize
         /// <summary>
         /// rank equality constraints.
         /// </summary>
-        public IDictionary<int, int> rankEqualityConstraints { get; set; }
+        public IDictionary<int, int> RankEqualityConstraints { get; set; }
 
         /// <summary>
         /// number of packets.
@@ -81,10 +81,10 @@ namespace MetaOptimize
         /// </summary>
         public SPPIFOEncoder(ISolver<TVar, TSolution> solver, int numPackets, int numQueues, int maxRank)
         {
-            this.Solver = solver;
-            this.MaxRank = maxRank;
-            this.NumPackets = numPackets;
-            this.NumQueues = numQueues;
+            Solver = solver;
+            MaxRank = maxRank;
+            NumPackets = numPackets;
+            NumQueues = numQueues;
         }
 
         /// <summary>
@@ -93,35 +93,35 @@ namespace MetaOptimize
         private void CreateVariables(Dictionary<int, TVar> preRankVariables,
             Dictionary<int, int> rankEqualityConstraints)
         {
-            this.packetRankVar = new Dictionary<int, TVar>();
-            this.queuePlacementVar = new Dictionary<(int, int), TVar>();
-            this.packetWeightVar = new Dictionary<int, TVar>();
-            this.queueRankVar = new Dictionary<(int, int), TVar>();
-            this.queueRankVarAfterPD = new Dictionary<(int, int), TVar>();
-            // this.pushdown = new Dictionary<int, TVar>();
-            this.dequeueAfter = new Dictionary<(int, int), TVar>();
-            for (int packetID = 0; packetID < this.NumPackets; packetID++) {
+            packetRankVar = new Dictionary<int, TVar>();
+            queuePlacementVar = new Dictionary<(int, int), TVar>();
+            PacketWeightVar = new Dictionary<int, TVar>();
+            queueRankVar = new Dictionary<(int, int), TVar>();
+            QueueRankVarAfterPD = new Dictionary<(int, int), TVar>();
+            // pushdown = new Dictionary<int, TVar>();
+            DequeueAfter = new Dictionary<(int, int), TVar>();
+            for (int packetID = 0; packetID < NumPackets; packetID++) {
                 if (preRankVariables == null) {
-                    this.packetRankVar[packetID] = this.Solver.CreateVariable("rank_" + packetID, GRB.INTEGER, lb: 0, ub: this.MaxRank);
+                    packetRankVar[packetID] = Solver.CreateVariable("rank_" + packetID, GRB.INTEGER, lb: 0, ub: MaxRank);
                 } else {
-                    this.packetRankVar[packetID] = preRankVariables[packetID];
+                    packetRankVar[packetID] = preRankVariables[packetID];
                 }
-                for (int queueID = 0; queueID < this.NumQueues; queueID++) {
-                    this.queuePlacementVar[(packetID, queueID)] = this.Solver.CreateVariable("place_" + packetID + "_" + queueID, GRB.BINARY);
-                    this.queueRankVar[(packetID, queueID)] = this.Solver.CreateVariable("queue_rank_" + packetID + "_" + queueID);
-                    this.queueRankVarAfterPD[(packetID, queueID)] = this.Solver.CreateVariable("queue_rank_after_pd_" + packetID + "_" + queueID);
+                for (int queueID = 0; queueID < NumQueues; queueID++) {
+                    queuePlacementVar[(packetID, queueID)] = Solver.CreateVariable("place_" + packetID + "_" + queueID, GRB.BINARY);
+                    queueRankVar[(packetID, queueID)] = Solver.CreateVariable("queue_rank_" + packetID + "_" + queueID);
+                    QueueRankVarAfterPD[(packetID, queueID)] = Solver.CreateVariable("queue_rank_after_pd_" + packetID + "_" + queueID);
                 }
-                for (int secondPacket = 0; secondPacket < this.NumPackets; secondPacket++) {
+                for (int secondPacket = 0; secondPacket < NumPackets; secondPacket++) {
                     if (secondPacket == packetID) {
                         continue;
                     }
-                    this.dequeueAfter[(packetID, secondPacket)] = this.Solver.CreateVariable("dequeu_" + packetID + "_after_" + secondPacket, GRB.BINARY);
+                    DequeueAfter[(packetID, secondPacket)] = Solver.CreateVariable("dequeu_" + packetID + "_after_" + secondPacket, GRB.BINARY);
                 }
-                this.packetWeightVar[packetID] = this.Solver.CreateVariable("packet_weight_" + packetID);
-                // this.pushdown[packetID] = this.Solver.CreateVariable("push_down_" + packetID, type: GRB.BINARY);
+                PacketWeightVar[packetID] = Solver.CreateVariable("packet_weight_" + packetID);
+                // pushdown[packetID] = Solver.CreateVariable("push_down_" + packetID, type: GRB.BINARY);
             }
-            this.rankEqualityConstraints = rankEqualityConstraints;
-            this.cost = this.Solver.CreateVariable("total_cost_optimal");
+            RankEqualityConstraints = rankEqualityConstraints;
+            cost = Solver.CreateVariable("total_cost_optimal");
             CreateAdditionalVariables();
         }
 
@@ -137,55 +137,55 @@ namespace MetaOptimize
         /// </summary>
         protected virtual void ApplyPushDown()
         {
-            // double epsilon = 1.0 / (1 + this.MaxRank);
-            for (int pid = 0; pid < this.NumPackets; pid++) {
+            // double epsilon = 1.0 / (1 + MaxRank);
+            for (int pid = 0; pid < NumPackets; pid++) {
                 // // pd <= 1 + \epsilon (lb_{i, n} - r_i)
                 // var constr1 = new Polynomial<TVar>(
-                //     new Term<TVar>(1, this.pushdown[pid]),
+                //     new Term<TVar>(1, pushdown[pid]),
                 //     new Term<TVar>(-1),
-                //     new Term<TVar>(-epsilon, this.queueRankVar[(pid, this.NumQueues - 1)]),
-                //     new Term<TVar>(epsilon, this.packetRankVar[pid]));
-                // this.Solver.AddLeqZeroConstraint(constr1);
+                //     new Term<TVar>(-epsilon, queueRankVar[(pid, NumQueues - 1)]),
+                //     new Term<TVar>(epsilon, packetRankVar[pid]));
+                // Solver.AddLeqZeroConstraint(constr1);
 
                 // // pd >= \epsilon (lb_{i, n} - r_i)
                 // var constr2 = new Polynomial<TVar>(
-                //     new Term<TVar>(-1, this.pushdown[pid]),
-                //     new Term<TVar>(epsilon, this.queueRankVar[(pid, this.NumQueues - 1)]),
-                //     new Term<TVar>(-epsilon, this.packetRankVar[pid]));
-                // this.Solver.AddLeqZeroConstraint(constr2);
+                //     new Term<TVar>(-1, pushdown[pid]),
+                //     new Term<TVar>(epsilon, queueRankVar[(pid, NumQueues - 1)]),
+                //     new Term<TVar>(-epsilon, packetRankVar[pid]));
+                // Solver.AddLeqZeroConstraint(constr2);
 
-                // var lin1 = EncodingUtils<TVar, TSolution>.LinearizeMultContinAndBinary(this.Solver,
-                //     this.packetRankVar[pid], this.pushdown[pid], this.MaxRank);
-                // var lin2 = EncodingUtils<TVar, TSolution>.LinearizeMultContinAndBinary(this.Solver,
-                //     this.queueRankVar[(pid, this.NumQueues - 1)], this.pushdown[pid], this.MaxRank);
+                // var lin1 = EncodingUtils<TVar, TSolution>.LinearizeMultContinAndBinary(Solver,
+                //     packetRankVar[pid], pushdown[pid], MaxRank);
+                // var lin2 = EncodingUtils<TVar, TSolution>.LinearizeMultContinAndBinary(Solver,
+                //     queueRankVar[(pid, NumQueues - 1)], pushdown[pid], MaxRank);
                 // // l'_{ij} = l_{ij} + pd * (r_i - lb_{i, N})
-                // for (int qid = 0; qid < this.NumQueues; qid++) {
+                // for (int qid = 0; qid < NumQueues; qid++) {
                 //     var constr3 = new Polynomial<TVar>(
-                //         new Term<TVar>(-1, this.queueRankVarAfterPD[(pid, qid)]),
-                //         new Term<TVar>(1, this.queueRankVar[(pid, qid)]),
+                //         new Term<TVar>(-1, queueRankVarAfterPD[(pid, qid)]),
+                //         new Term<TVar>(1, queueRankVar[(pid, qid)]),
                 //         new Term<TVar>(1, lin1),
                 //         new Term<TVar>(-1, lin2));
-                //     this.Solver.AddEqZeroConstraint(constr3);
+                //     Solver.AddEqZeroConstraint(constr3);
                 // }
 
                 // pdBias = max(lb_{i, N} - r_i, 0)
                 var biasPoly = new Polynomial<TVar>(
-                    new Term<TVar>(1, this.queueRankVar[(pid, this.NumQueues - 1)]),
-                    new Term<TVar>(-1, this.packetRankVar[pid]));
+                    new Term<TVar>(1, queueRankVar[(pid, NumQueues - 1)]),
+                    new Term<TVar>(-1, packetRankVar[pid]));
 
                 var pdBias = EncodingUtils<TVar, TSolution>.MaxTwoVar(
-                    this.Solver,
+                    Solver,
                     biasPoly,
                     new Polynomial<TVar>(new Term<TVar>(0)),
-                    this.MaxRank);
+                    MaxRank);
 
                 // l'_{i, j} = l_{ij} - pdBias
-                for (int qid = 0; qid < this.NumQueues; qid++) {
+                for (int qid = 0; qid < NumQueues; qid++) {
                     var constr = new Polynomial<TVar>(
-                        new Term<TVar>(-1, this.queueRankVarAfterPD[(pid, qid)]),
-                        new Term<TVar>(1, this.queueRankVar[(pid, qid)]),
+                        new Term<TVar>(-1, QueueRankVarAfterPD[(pid, qid)]),
+                        new Term<TVar>(1, queueRankVar[(pid, qid)]),
                         new Term<TVar>(-1, pdBias));
-                    this.Solver.AddEqZeroConstraint(constr);
+                    Solver.AddEqZeroConstraint(constr);
                 }
             }
         }
@@ -195,14 +195,14 @@ namespace MetaOptimize
         /// </summary>
         protected virtual void EnsureAtLeastOneQueue()
         {
-            for (int pid = 0; pid < this.NumPackets; pid++) {
+            for (int pid = 0; pid < NumPackets; pid++) {
                 var sumOverQ = new Polynomial<TVar>(new Term<TVar>(-1));
-                for (int qid = 0; qid < this.NumQueues; qid++)
+                for (int qid = 0; qid < NumQueues; qid++)
                 {
-                    sumOverQ.Add(new Term<TVar>(1, this.queuePlacementVar[(pid, qid)]));
+                    sumOverQ.Add(new Term<TVar>(1, queuePlacementVar[(pid, qid)]));
                 }
                 // sum f over j = 1
-                this.Solver.AddEqZeroConstraint(sumOverQ);
+                Solver.AddEqZeroConstraint(sumOverQ);
             }
         }
 
@@ -211,10 +211,10 @@ namespace MetaOptimize
         /// </summary>
         protected virtual void ChooseQueue()
         {
-            double epsilon = 1.0 / (1 + this.MaxRank);
+            double epsilon = 1.0 / (1 + MaxRank);
             double miu = epsilon / 2;
-            for (int pid = 0; pid < this.NumPackets; pid++) {
-                for (int qid = 0; qid < this.NumQueues; qid++)
+            for (int pid = 0; pid < NumPackets; pid++) {
+                for (int qid = 0; qid < NumQueues; qid++)
                 {
                     CheckQueueLB(epsilon, pid, qid);
                     CheckQueueUB(epsilon, miu, pid, qid);
@@ -234,11 +234,11 @@ namespace MetaOptimize
             }
             // f <= 1 + epsilon (l_{i,j-1} - r_i) - miu
             var constr2 = new Polynomial<TVar>(
-                new Term<TVar>(1, this.queuePlacementVar[(pid, qid)]),
+                new Term<TVar>(1, queuePlacementVar[(pid, qid)]),
                 new Term<TVar>(-1 + miu),
-                new Term<TVar>(-epsilon, this.queueRankVarAfterPD[(pid, qid - 1)]),
-                new Term<TVar>(epsilon, this.packetRankVar[pid]));
-            this.Solver.AddLeqZeroConstraint(constr2);
+                new Term<TVar>(-epsilon, QueueRankVarAfterPD[(pid, qid - 1)]),
+                new Term<TVar>(epsilon, packetRankVar[pid]));
+            Solver.AddLeqZeroConstraint(constr2);
         }
 
         /// <summary>
@@ -248,11 +248,11 @@ namespace MetaOptimize
         {
             // f <= 1 + epsilon (r_i - l_{i,j})
             var constr1 = new Polynomial<TVar>(
-                new Term<TVar>(1, this.queuePlacementVar[(pid, qid)]),
+                new Term<TVar>(1, queuePlacementVar[(pid, qid)]),
                 new Term<TVar>(-1),
-                new Term<TVar>(-epsilon, this.packetRankVar[pid]),
-                new Term<TVar>(epsilon, this.queueRankVarAfterPD[(pid, qid)]));
-            this.Solver.AddLeqZeroConstraint(constr1);
+                new Term<TVar>(-epsilon, packetRankVar[pid]),
+                new Term<TVar>(epsilon, QueueRankVarAfterPD[(pid, qid)]));
+            Solver.AddLeqZeroConstraint(constr1);
         }
 
         /// <summary>
@@ -264,31 +264,31 @@ namespace MetaOptimize
 
         private void ApplyPushUp()
         {
-            for (int pid = 0; pid < this.NumPackets - 1; pid++) {
-                for (int qid = 0; qid < this.NumQueues; qid++) {
+            for (int pid = 0; pid < NumPackets - 1; pid++) {
+                for (int qid = 0; qid < NumQueues; qid++) {
                     var biasPoly = new Polynomial<TVar>(
-                        new Term<TVar>(1, this.packetRankVar[pid]),
-                        new Term<TVar>(-1, this.queueRankVarAfterPD[(pid, qid)]));
+                        new Term<TVar>(1, packetRankVar[pid]),
+                        new Term<TVar>(-1, QueueRankVarAfterPD[(pid, qid)]));
 
-                    var puBias = EncodingUtils<TVar, TSolution>.LinearizeMultGenContinAndBinary(this.Solver,
-                        biasPoly, this.queuePlacementVar[(pid, qid)], this.MaxRank);
+                    var puBias = EncodingUtils<TVar, TSolution>.LinearizeMultGenContinAndBinary(Solver,
+                        biasPoly, queuePlacementVar[(pid, qid)], MaxRank);
 
                     var constr = new Polynomial<TVar>(
-                        new Term<TVar>(-1, this.queueRankVar[(pid + 1, qid)]),
-                        new Term<TVar>(1, this.queueRankVarAfterPD[(pid, qid)]),
+                        new Term<TVar>(-1, queueRankVar[(pid + 1, qid)]),
+                        new Term<TVar>(1, QueueRankVarAfterPD[(pid, qid)]),
                         new Term<TVar>(1, puBias));
-                    this.Solver.AddEqZeroConstraint(constr);
+                    Solver.AddEqZeroConstraint(constr);
 
-                    // var lin1 = EncodingUtils<TVar, TSolution>.LinearizeMultNonNegContinAndBinary(this.Solver,
-                    //     this.packetRankVar[pid], this.queuePlacementVar[(pid, qid)], this.MaxRank);
-                    // var lin2 = EncodingUtils<TVar, TSolution>.LinearizeMultNonNegContinAndBinary(this.Solver,
-                    //     this.queueRankVarAfterPD[(pid, qid)], this.queuePlacementVar[(pid, qid)], this.MaxRank);
+                    // var lin1 = EncodingUtils<TVar, TSolution>.LinearizeMultNonNegContinAndBinary(Solver,
+                    //     packetRankVar[pid], queuePlacementVar[(pid, qid)], MaxRank);
+                    // var lin2 = EncodingUtils<TVar, TSolution>.LinearizeMultNonNegContinAndBinary(Solver,
+                    //     queueRankVarAfterPD[(pid, qid)], queuePlacementVar[(pid, qid)], MaxRank);
                     // var constr = new Polynomial<TVar>(
-                    //     new Term<TVar>(-1, this.queueRankVar[(pid + 1, qid)]),
-                    //     new Term<TVar>(1, this.queueRankVarAfterPD[(pid, qid)]),
+                    //     new Term<TVar>(-1, queueRankVar[(pid + 1, qid)]),
+                    //     new Term<TVar>(1, queueRankVarAfterPD[(pid, qid)]),
                     //     new Term<TVar>(1, lin1),
                     //     new Term<TVar>(-1, lin2));
-                    // this.Solver.AddEqZeroConstraint(constr);
+                    // Solver.AddEqZeroConstraint(constr);
                 }
             }
         }
@@ -298,17 +298,17 @@ namespace MetaOptimize
         /// </summary>
         protected virtual void AssignWeights()
         {
-            for (int pid = 0; pid < this.NumPackets; pid++) {
+            for (int pid = 0; pid < NumPackets; pid++) {
                 var sumPoly = new Polynomial<TVar>(
-                    new Term<TVar>(-1, this.packetWeightVar[pid]),
+                    new Term<TVar>(-1, PacketWeightVar[pid]),
                     new Term<TVar>(-1 * pid));
-                for (int qid = 0; qid < this.NumQueues; qid++) {
-                    sumPoly.Add(new Term<TVar>((qid + 1) * this.NumPackets, this.queuePlacementVar[(pid, qid)]));
-                    // var lin1 = EncodingUtils<TVar, TSolution>.LinearizeMultContinAndBinary(this.Solver,
-                    //     this.numPacketsInEachQueue[(pid, qid)], this.queuePlacementVar[(pid, qid)], this.NumPackets);
+                for (int qid = 0; qid < NumQueues; qid++) {
+                    sumPoly.Add(new Term<TVar>((qid + 1) * NumPackets, queuePlacementVar[(pid, qid)]));
+                    // var lin1 = EncodingUtils<TVar, TSolution>.LinearizeMultContinAndBinary(Solver,
+                    //     numPacketsInEachQueue[(pid, qid)], queuePlacementVar[(pid, qid)], NumPackets);
                     // sumPoly.Add(new Term<TVar>(-1, lin1));
                 }
-                this.Solver.AddEqZeroConstraint(sumPoly);
+                Solver.AddEqZeroConstraint(sumPoly);
             }
         }
 
@@ -317,49 +317,49 @@ namespace MetaOptimize
         /// </summary>
         protected virtual void ComputeOrder()
         {
-            double epsilon = 1.0 / (this.NumPackets * this.NumQueues);
-            for (int pid = 0; pid < this.NumPackets; pid++) {
-                for (int pid2 = 0; pid2 < this.NumPackets; pid2++) {
+            double epsilon = 1.0 / (NumPackets * NumQueues);
+            for (int pid = 0; pid < NumPackets; pid++) {
+                for (int pid2 = 0; pid2 < NumPackets; pid2++) {
                     if (pid2 == pid) {
                         continue;
                     }
                     var constr1 = new Polynomial<TVar>(
-                        new Term<TVar>(1, this.dequeueAfter[(pid, pid2)]),
+                        new Term<TVar>(1, DequeueAfter[(pid, pid2)]),
                         new Term<TVar>(-1),
-                        new Term<TVar>(-epsilon, this.packetWeightVar[pid2]),
-                        new Term<TVar>(epsilon, this.packetWeightVar[pid]));
-                    this.Solver.AddLeqZeroConstraint(constr1);
+                        new Term<TVar>(-epsilon, PacketWeightVar[pid2]),
+                        new Term<TVar>(epsilon, PacketWeightVar[pid]));
+                    Solver.AddLeqZeroConstraint(constr1);
 
                     var constr2 = new Polynomial<TVar>(
-                        new Term<TVar>(-1, this.dequeueAfter[(pid, pid2)]),
-                        new Term<TVar>(epsilon, this.packetWeightVar[pid2]),
-                        new Term<TVar>(-epsilon, this.packetWeightVar[pid]));
-                    this.Solver.AddLeqZeroConstraint(constr2);
+                        new Term<TVar>(-1, DequeueAfter[(pid, pid2)]),
+                        new Term<TVar>(epsilon, PacketWeightVar[pid2]),
+                        new Term<TVar>(-epsilon, PacketWeightVar[pid]));
+                    Solver.AddLeqZeroConstraint(constr2);
                 }
             }
         }
 
         private void EnsureRankEquality() {
-            if (this.rankEqualityConstraints == null) {
+            if (RankEqualityConstraints == null) {
                 return;
             }
 
-            for (int pid = 0; pid < this.NumPackets; pid++) {
+            for (int pid = 0; pid < NumPackets; pid++) {
                 var constr = new Polynomial<TVar>(
-                    new Term<TVar>(-1 * this.rankEqualityConstraints[pid]),
-                    new Term<TVar>(1, this.packetRankVar[pid]));
-                this.Solver.AddEqZeroConstraint(constr);
+                    new Term<TVar>(-1 * RankEqualityConstraints[pid]),
+                    new Term<TVar>(1, packetRankVar[pid]));
+                Solver.AddEqZeroConstraint(constr);
             }
         }
 
         private void InitializeVariables() {
-            for (int qid = 0; qid < this.NumQueues; qid++) {
+            for (int qid = 0; qid < NumQueues; qid++) {
                 // initial bound for queues.
-                this.Solver.AddEqZeroConstraint(new Polynomial<TVar>(
-                    new Term<TVar>(1, this.queueRankVar[(0, qid)])));
+                Solver.AddEqZeroConstraint(new Polynomial<TVar>(
+                    new Term<TVar>(1, queueRankVar[(0, qid)])));
                 // initial num packets in each queue;
-                // this.Solver.AddEqZeroConstraint(new Polynomial<TVar>(
-                //     new Term<TVar>(1, this.numPacketsInEachQueue[(0, qid)])));
+                // Solver.AddEqZeroConstraint(new Polynomial<TVar>(
+                //     new Term<TVar>(1, numPacketsInEachQueue[(0, qid)])));
             }
         }
 
@@ -379,40 +379,40 @@ namespace MetaOptimize
             bool verbose = false)
         {
             Utils.logger("create variables", verbose);
-            this.CreateVariables(preRankVariables, rankEqualityConstraints);
+            CreateVariables(preRankVariables, rankEqualityConstraints);
 
             Utils.logger("initialize variables", verbose);
-            this.InitializeVariables();
+            InitializeVariables();
 
             Utils.logger("ensure ranks are equal to input ranks", verbose);
-            this.EnsureRankEquality();
+            EnsureRankEquality();
 
             Utils.logger("apply push down if necessary", verbose);
-            this.ApplyPushDown();
+            ApplyPushDown();
 
             Utils.logger("decide which queue to use", verbose);
-            this.ChooseQueue();
+            ChooseQueue();
 
             Utils.logger("apply push up", verbose);
-            this.ApplyPushUp();
+            ApplyPushUp();
 
             Utils.logger("Assign weights to packets based on order", verbose);
-            this.AssignWeights();
+            AssignWeights();
 
             Utils.logger("Compute order of packets", verbose);
-            this.ComputeOrder();
+            ComputeOrder();
 
             Utils.logger("Adding additional constraints for modified versions", verbose);
-            this.AddOtherConstraints();
+            AddOtherConstraints();
 
             Utils.logger("Compute cost", verbose);
-            this.ComputeCost();
-            var objective = new Polynomial<TVar>(new Term<TVar>(-1, this.cost));
+            ComputeCost();
+            var objective = new Polynomial<TVar>(new Term<TVar>(-1, cost));
             return new PIFOOptimizationEncoding<TVar, TSolution>
             {
-                GlobalObjective = this.cost,
+                GlobalObjective = cost,
                 MaximizationObjective = objective,
-                RankVariables = this.packetRankVar,
+                RankVariables = packetRankVar,
             };
         }
 
@@ -441,36 +441,36 @@ namespace MetaOptimize
             var packetOrder = new Dictionary<int, int>();
             var packetAdmit = new Dictionary<int, int>();
 
-            for (int pid = 0; pid < this.NumPackets; pid++) {
-                packetRanks[pid] = this.Solver.GetVariable(solution, this.packetRankVar[pid]);
+            for (int pid = 0; pid < NumPackets; pid++) {
+                packetRanks[pid] = Solver.GetVariable(solution, packetRankVar[pid]);
                 packetOrder[pid] = 0;
-                for (int pid2 = 0; pid2 < this.NumPackets; pid2++) {
+                for (int pid2 = 0; pid2 < NumPackets; pid2++) {
                     if (pid == pid2) {
                         continue;
                     }
                     // if (pid < pid2) {
-                    int dequeueAfter = Convert.ToInt32(this.Solver.GetVariable(solution, this.dequeueAfter[(pid, pid2)]));
+                    int dequeueAfter = Convert.ToInt32(Solver.GetVariable(solution, DequeueAfter[(pid, pid2)]));
                     // } else {
-                    //     dequeueAfter = 1 - Convert.ToInt32(this.Solver.GetVariable(solution, this.dequeueAfter[(pid2, pid)]));
+                    //     dequeueAfter = 1 - Convert.ToInt32(Solver.GetVariable(solution, dequeueAfter[(pid2, pid)]));
                     // }
                     Console.WriteLine("packet " + pid + " deque after " + pid2 + " = " + dequeueAfter);
                     packetOrder[pid] += dequeueAfter;
                 }
 
-                for (int place = 0; place < this.NumQueues; place++) {
-                    var lb = this.Solver.GetVariable(solution, this.queueRankVar[(pid, place)]);
+                for (int place = 0; place < NumQueues; place++) {
+                    var lb = Solver.GetVariable(solution, queueRankVar[(pid, place)]);
                     Console.WriteLine(" lb of queue " + place + " when entering pkt " + pid + " = " + lb);
                 }
-                var weight = this.Solver.GetVariable(solution, this.packetWeightVar[pid]);
+                var weight = Solver.GetVariable(solution, PacketWeightVar[pid]);
                 Console.WriteLine(" weight of packet " + pid + " = " + weight);
-                packetAdmit[pid] = this.GetAdmitSolution(solution, pid);
+                packetAdmit[pid] = GetAdmitSolution(solution, pid);
             }
 
             return new PIFOOptimizationSolution
             {
                 Ranks = packetRanks,
                 Order = packetOrder,
-                Cost = this.Solver.GetVariable(solution, this.cost),
+                Cost = Solver.GetVariable(solution, cost),
                 Admit = packetAdmit,
             };
         }

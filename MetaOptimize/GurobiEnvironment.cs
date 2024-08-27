@@ -18,9 +18,9 @@ namespace MetaOptimize
                     if (!Environment.UserName.Contains("solal", StringComparison.OrdinalIgnoreCase))
                     {
                         _env.Set("LogFile", "maxFlowSolver.log");
-                        File.WriteAllText(
-                           Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "gurobi.lic"),
-                           "TOKENSERVER=10.137.59.115"); // ishai-z420, as of June 8th 2023
+                        // File.WriteAllText(
+                        //    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "gurobi.lic"),
+                        //    "TOKENSERVER=10.137.59.115"); // ishai-z420, as of June 8th 2023
                     }
                     try
                     {
